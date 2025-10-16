@@ -20,13 +20,51 @@ export default function Registration({ onSuccess, onSwitchToLogin }: Registratio
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [gamertagError, setGamertagError] = useState('');
+
+  const checkGamertagAvailability = async (gamertag: string) => {
+    if (!gamertag) {
+      setGamertagError('');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('players')
+      .select('gamertag')
+      .eq('gamertag', gamertag)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking gamertag:', error);
+      return;
+    }
+
+    if (data) {
+      setGamertagError('Gamertag already taken');
+    } else {
+      setGamertagError('');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setGamertagError('');
 
     try {
+      const { data: existingPlayer } = await supabase
+        .from('players')
+        .select('gamertag')
+        .eq('gamertag', formData.gamertag)
+        .maybeSingle();
+
+      if (existingPlayer) {
+        setGamertagError('Gamertag already taken');
+        setLoading(false);
+        return;
+      }
+
       const { data, error: insertError } = await supabase
         .from('players')
         .insert([
@@ -163,12 +201,23 @@ export default function Registration({ onSuccess, onSwitchToLogin }: Registratio
                 <input
                   type="text"
                   value={formData.gamertag}
-                  onChange={(e) => setFormData({ ...formData, gamertag: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-black/80 border-2 border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all font-medium"
+                  onChange={(e) => {
+                    setFormData({ ...formData, gamertag: e.target.value });
+                    setGamertagError('');
+                  }}
+                  onBlur={(e) => checkGamertagAvailability(e.target.value)}
+                  className={`w-full pl-12 pr-4 py-3 bg-black/80 border-2 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all font-medium ${
+                    gamertagError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                      : 'border-slate-700 focus:border-orange-500 focus:ring-orange-500/20'
+                  }`}
                   placeholder="ProGamer123"
                   required
                 />
               </div>
+              {gamertagError && (
+                <p className="mt-2 text-sm text-red-400 font-bold">{gamertagError}</p>
+              )}
             </div>
 
             {/* Password */}

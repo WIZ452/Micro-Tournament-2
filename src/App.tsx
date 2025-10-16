@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, Users, Target, Award, LayoutDashboard, LogOut, Info, Bell } from 'lucide-react';
+import { Trophy, Users, Target, Award, LayoutDashboard, LogOut, Info, Bell, Mail } from 'lucide-react';
 import Hero from './components/Hero';
 import Features from './components/Features';
 import Registration from './components/Registration';
@@ -182,26 +182,46 @@ function App() {
       {/* Footer */}
       <footer className="relative z-10 bg-black/80 border-t border-orange-500/10 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center space-x-2">
-              <Trophy className="w-6 h-6 text-orange-500" />
-              <span className="text-slate-300 font-bold">Micro Tournaments 2025</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="flex flex-col items-center md:items-start space-y-2">
+              <div className="flex items-center space-x-2">
+                <Trophy className="w-6 h-6 text-orange-500" />
+                <span className="text-slate-300 font-bold">Micro Tournaments 2025</span>
+              </div>
+              <p className="text-slate-500 text-sm text-center md:text-left">Compete. Dominate. Win.</p>
             </div>
-            <div className="flex items-center space-x-6 text-orange-500 text-sm font-bold uppercase tracking-wide">
-              <span>Compete. Dominate. Win.</span>
-            </div>
-            {isAuthenticated && (
-              <button
-                onClick={() => {
-                  logout();
-                  setActiveSection('home');
-                }}
-                className="group flex items-center space-x-2 px-6 py-3 rounded-xl font-bold uppercase text-sm tracking-wide transition-all duration-300 hover:scale-105 bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/50"
+
+            <div className="flex flex-col items-center space-y-3">
+              <h3 className="text-white font-black uppercase tracking-wide text-sm">Help & Support</h3>
+              <a
+                href="mailto:microtournaments4@gmail.com"
+                className="text-orange-500 hover:text-orange-400 transition-colors font-medium text-sm flex items-center space-x-2"
               >
-                <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-                <span>Logout</span>
-              </button>
-            )}
+                <Mail className="w-4 h-4" />
+                <span>microtournaments4@gmail.com</span>
+              </a>
+            </div>
+
+            <div className="flex flex-col items-center md:items-end">
+              {isAuthenticated && (
+                <button
+                  onClick={() => {
+                    logout();
+                    setActiveSection('home');
+                  }}
+                  className="group flex items-center space-x-2 px-6 py-3 rounded-xl font-bold uppercase text-sm tracking-wide transition-all duration-300 hover:scale-105 bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg shadow-red-500/30 hover:shadow-red-500/50"
+                >
+                  <LogOut className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
+                  <span>Logout</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-orange-500/10 text-center">
+            <p className="text-slate-500 text-sm">
+              &copy; 2025 Micro Tournaments. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

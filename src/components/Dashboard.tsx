@@ -1,29 +1,205 @@
+import { useState, useEffect } from 'react';
 import { Trophy, Target, Award, TrendingUp, Calendar, Zap, Medal, Crown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { supabase } from '../lib/supabase';
+
+interface PlayerStats {
+  tournamentsPlayed: number;
+  wins: number;
+  winRate: string;
+  rank: number;
+}
+
+interface RecentMatch {
+  tournament: string;
+  date: string;
+  placement: string;
+  prize: string;
+  status: 'won' | 'lost';
+}
+
+interface UpcomingTournament {
+  id: string;
+  name: string;
+  time: string;
+  slots: string;
+  prize: string;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
 
-  const stats = [
-    { icon: Trophy, label: 'Tournaments Played', value: '12', color: 'from-orange-500 to-red-600' },
-    { icon: Award, label: 'Wins', value: '3', color: 'from-yellow-500 to-orange-500' },
-    { icon: Target, label: 'Win Rate', value: '25%', color: 'from-red-500 to-orange-600' },
-    { icon: TrendingUp, label: 'Rank', value: '#247', color: 'from-orange-600 to-red-500' }
-  ];
+  const [stats, setStats] = useState<PlayerStats>({
+    tournamentsPlayed: 0,
+    wins: 0,
+    winRate: '0%',
+    rank: 0
+  });
+  const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([]);
+  const [upcomingTournaments, setUpcomingTournaments] = useState<UpcomingTournament[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentMatches = [
-    { tournament: 'Weekend Warriors', date: 'Oct 3, 2025', placement: '1st', prize: '$250', status: 'won' },
-    { tournament: 'Friday Night Showdown', date: 'Oct 2, 2025', placement: '4th', prize: '-', status: 'lost' },
-    { tournament: 'Midweek Madness', date: 'Sep 30, 2025', placement: '2nd', prize: '$150', status: 'won' }
-  ];
+  useEffect(() => {
+    if (user) {
+      loadPlayerData();
+    }
+  }, [user]);
 
-  const upcomingTournaments = [
-    { name: 'Saturday Showdown', time: 'Today, 8:00 PM', slots: '14/16', prize: '$500' },
-    { name: 'Sunday Championship', time: 'Tomorrow, 6:00 PM', slots: '8/32', prize: '$1000' },
-    { name: 'Monday Madness', time: 'Oct 7, 7:00 PM', slots: '12/16', prize: '$300' }
+  const loadPlayerData = async () => {
+    if (!user) return;
+
+    try {
+      const { data: registrations, error: regError } = await supabase
+        .from('tournament_registrations')
+        .select('tournament_id')
+        .eq('player_id', user.id);
+
+      const tournamentsPlayed = registrations?.length || 0;
+
+      const { data: wonMatches, error: matchError } = await supabase
+        .from('matches')
+        .select('id')
+        .eq('winner_id', user.id)
+        .eq('status', 'completed');
+
+      const wins = wonMatches?.length || 0;
+      const winRate = tournamentsPlayed > 0
+        ? Math.round((wins / tournamentsPlayed) * 100) + '%'
+        : '0%';
+
+      const { data: allPlayers, error: playersError } = await supabase
+        .from('players')
+        .select('id');
+
+      const totalPlayers = allPlayers?.length || 0;
+
+      const { data: playerWins } = await supabase
+        .from('matches')
+        .select('winner_id')
+        .eq('status', 'completed');
+
+      const winCounts = new Map<string, number>();
+      playerWins?.forEach(match => {
+        if (match.winner_id) {
+          winCounts.set(match.winner_id, (winCounts.get(match.winner_id) || 0) + 1);
+        }
+      });
+
+      const sortedPlayers = Array.from(winCounts.entries())
+        .sort((a, b) => b[1] - a[1]);
+
+      const userRankIndex = sortedPlayers.findIndex(([id]) => id === user.id);
+      const rank = userRankIndex >= 0 ? userRankIndex + 1 : totalPlayers;
+
+      setStats({
+        tournamentsPlayed,
+        wins,
+        winRate,
+        rank
+      });
+
+      const { data: matches } = await supabase
+        .from('matches')
+        .select(`
+          id,
+          tournament_id,
+          player1_id,
+          player2_id,
+          player1_score,
+          player2_score,
+          winner_id,
+          completed_at,
+          tournaments (title)
+        `)
+        .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(3);
+
+      const formattedMatches: RecentMatch[] = matches?.map((match: any) => {
+        const isWinner = match.winner_id === user.id;
+        const isPlayer1 = match.player1_id === user.id;
+        const playerScore = isPlayer1 ? match.player1_score : match.player2_score;
+        const opponentScore = isPlayer1 ? match.player2_score : match.player1_score;
+
+        let placement = '4th';
+        if (isWinner) {
+          placement = '1st';
+        } else if (playerScore > 0) {
+          placement = '2nd';
+        }
+
+        return {
+          tournament: match.tournaments?.title || 'Unknown Tournament',
+          date: new Date(match.completed_at).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }),
+          placement,
+          prize: isWinner ? '$100' : '-',
+          status: isWinner ? 'won' : 'lost'
+        };
+      }) || [];
+
+      setRecentMatches(formattedMatches);
+
+      const { data: tournaments } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('status', 'upcoming')
+        .order('start_date', { ascending: true })
+        .limit(3);
+
+      const formattedTournaments: UpcomingTournament[] = tournaments?.map(tournament => {
+        const startDate = new Date(tournament.start_date);
+        const now = new Date();
+        const diffDays = Math.floor((startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+        let timeStr = startDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+
+        if (diffDays === 0) {
+          timeStr = 'Today, ' + startDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+        } else if (diffDays === 1) {
+          timeStr = 'Tomorrow, ' + startDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+        }
+
+        return {
+          id: tournament.id,
+          name: tournament.title,
+          time: timeStr,
+          slots: `${tournament.current_players}/${tournament.max_players}`,
+          prize: `$${tournament.prize_pool}`
+        };
+      }) || [];
+
+      setUpcomingTournaments(formattedTournaments);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading player data:', error);
+      setLoading(false);
+    }
+  };
+
+  const statsDisplay = [
+    { icon: Trophy, label: 'Tournaments Played', value: stats.tournamentsPlayed.toString(), color: 'from-orange-500 to-red-600' },
+    { icon: Award, label: 'Wins', value: stats.wins.toString(), color: 'from-yellow-500 to-orange-500' },
+    { icon: Target, label: 'Win Rate', value: stats.winRate, color: 'from-red-500 to-orange-600' },
+    { icon: TrendingUp, label: 'Rank', value: stats.rank > 0 ? `#${stats.rank}` : 'N/A', color: 'from-orange-600 to-red-500' }
   ];
 
   return (
@@ -62,7 +238,7 @@ export default function Dashboard() {
             statsVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
         >
-          {stats.map((stat, index) => (
+          {statsDisplay.map((stat, index) => (
             <div
               key={index}
               className="relative group"
@@ -92,7 +268,16 @@ export default function Dashboard() {
                 </h2>
               </div>
               <div className="space-y-4">
-                {recentMatches.map((match, index) => (
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 font-medium">Loading...</p>
+                  </div>
+                ) : recentMatches.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 font-medium">No recent matches yet. Join a tournament to get started!</p>
+                  </div>
+                ) : (
+                  recentMatches.map((match, index) => (
                   <div
                     key={index}
                     className="bg-black/60 border-2 border-slate-700/50 rounded-xl p-4 hover:border-orange-500/50 transition-all"
@@ -117,7 +302,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -133,7 +319,16 @@ export default function Dashboard() {
                 </h2>
               </div>
               <div className="space-y-4">
-                {upcomingTournaments.map((tournament, index) => (
+                {loading ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 font-medium">Loading...</p>
+                  </div>
+                ) : upcomingTournaments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-400 font-medium">No upcoming tournaments. Check back soon!</p>
+                  </div>
+                ) : (
+                  upcomingTournaments.map((tournament, index) => (
                   <div
                     key={index}
                     className="bg-black/60 border-2 border-slate-700/50 rounded-xl p-4 hover:border-orange-500/50 transition-all group"
@@ -155,7 +350,8 @@ export default function Dashboard() {
                       </button>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
