@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trophy, Users, Target, Award, LayoutDashboard, LogOut, Info, Bell, Mail } from 'lucide-react';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -9,6 +9,14 @@ import PreviousWinners from './components/PreviousWinners';
 import Dashboard from './components/Dashboard';
 import About from './components/About';
 import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
+
+interface Notification {
+  id: number;
+  type: string;
+  message: string;
+  time: string;
+}
 
 function App() {
   const { isAuthenticated, logout, user } = useAuth();
@@ -16,12 +24,117 @@ function App() {
     isAuthenticated ? 'dashboard' : 'home'
   );
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const notifications = [
-    { id: 1, type: 'tournament', message: 'New tournament starting in 1 hour!', time: '5 min ago' },
-    { id: 2, type: 'win', message: 'Congratulations! You won $250', time: '2 hours ago' },
-    { id: 3, type: 'match', message: 'Your match is ready', time: '1 day ago' }
-  ];
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadNotifications();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadNotifications = async () => {
+    if (!user) return;
+
+    try {
+      const notificationsList: Notification[] = [];
+
+      const { data: upcomingTournaments } = await supabase
+        .from('tournaments')
+        .select('*')
+        .eq('status', 'upcoming')
+        .order('start_date', { ascending: true })
+        .limit(2);
+
+      upcomingTournaments?.forEach((tournament, index) => {
+        const startDate = new Date(tournament.start_date);
+        const now = new Date();
+        const diffHours = Math.floor((startDate.getTime() - now.getTime()) / (1000 * 60 * 60));
+
+        if (diffHours <= 24 && diffHours > 0) {
+          let timeStr = '';
+          if (diffHours < 1) {
+            const diffMinutes = Math.floor((startDate.getTime() - now.getTime()) / (1000 * 60));
+            timeStr = `starting in ${diffMinutes} minutes`;
+          } else if (diffHours === 1) {
+            timeStr = 'starting in 1 hour';
+          } else if (diffHours < 24) {
+            timeStr = `starting in ${diffHours} hours`;
+          }
+
+          notificationsList.push({
+            id: index + 1,
+            type: 'tournament',
+            message: `${tournament.title} ${timeStr}!`,
+            time: timeStr
+          });
+        }
+      });
+
+      const { data: recentWins } = await supabase
+        .from('matches')
+        .select('*, tournaments(title, prize_pool)')
+        .eq('winner_id', user.id)
+        .eq('status', 'completed')
+        .order('completed_at', { ascending: false })
+        .limit(2);
+
+      recentWins?.forEach((match: any) => {
+        const completedDate = new Date(match.completed_at);
+        const now = new Date();
+        const diffHours = Math.floor((now.getTime() - completedDate.getTime()) / (1000 * 60 * 60));
+
+        let timeStr = '';
+        if (diffHours < 1) {
+          timeStr = 'just now';
+        } else if (diffHours === 1) {
+          timeStr = '1 hour ago';
+        } else if (diffHours < 24) {
+          timeStr = `${diffHours} hours ago`;
+        } else {
+          const diffDays = Math.floor(diffHours / 24);
+          timeStr = diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+        }
+
+        const prize = match.tournaments?.prize_pool ? `$${Math.floor(match.tournaments.prize_pool / 2)}` : '$100';
+
+        notificationsList.push({
+          id: notificationsList.length + 1,
+          type: 'win',
+          message: `Congratulations! You won ${prize} in ${match.tournaments?.title || 'tournament'}`,
+          time: timeStr
+        });
+      });
+
+      const { data: upcomingMatches } = await supabase
+        .from('matches')
+        .select('*, tournaments(title)')
+        .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
+        .eq('status', 'upcoming')
+        .order('scheduled_time', { ascending: true })
+        .limit(1);
+
+      upcomingMatches?.forEach((match: any) => {
+        if (match.scheduled_time) {
+          const matchDate = new Date(match.scheduled_time);
+          const now = new Date();
+          const diffMinutes = Math.floor((matchDate.getTime() - now.getTime()) / (1000 * 60));
+
+          if (diffMinutes <= 30 && diffMinutes > 0) {
+            notificationsList.push({
+              id: notificationsList.length + 1,
+              type: 'match',
+              message: `Your match in ${match.tournaments?.title || 'tournament'} starts in ${diffMinutes} minutes`,
+              time: `${diffMinutes} min`
+            });
+          }
+        }
+      });
+
+      setNotifications(notificationsList);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black">

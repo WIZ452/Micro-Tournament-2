@@ -1,10 +1,9 @@
-import { Trophy, Users, Target, Award, MessageCircle, Bell } from 'lucide-react';
+import { Trophy, Users, Target, MessageCircle, Bell } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 export default function About() {
   const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
   const { ref: contentRef, isVisible: contentVisible } = useScrollAnimation();
-  const { ref: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
 
   return (
     <div className="min-h-screen py-20">
@@ -110,30 +109,30 @@ export default function About() {
                   <Bell className="w-8 h-8 text-orange-500" />
                   Stay Updated
                 </h2>
-                <p className="text-lg font-medium mb-4">Check these channels regularly:</p>
+                <p className="text-lg font-medium mb-4">Keep track of the latest tournament information:</p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <span className="text-xl">📢</span>
                     <p className="text-lg font-medium flex-1">
-                      <span className="text-orange-500 font-bold">#announcement</span> for upcoming tournaments
+                      Check the <span className="text-orange-500 font-bold">Tournaments</span> section for upcoming events and registration details
                     </p>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-xl">📋</span>
                     <p className="text-lg font-medium flex-1">
-                      <span className="text-orange-500 font-bold">#server-rules</span> before participating
+                      Review our <span className="text-orange-500 font-bold">tournament rules</span> and code of conduct before participating
                     </p>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-xl">🎮</span>
                     <p className="text-lg font-medium flex-1">
-                      <span className="text-orange-500 font-bold">#tournaments</span> to register
+                      Visit the <span className="text-orange-500 font-bold">Dashboard</span> to track your stats and view ongoing tournaments
                     </p>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="text-xl">📖</span>
                     <p className="text-lg font-medium flex-1">
-                      <span className="text-orange-500 font-bold">#tournament-rules</span> for event-specific info
+                      Check the <span className="text-orange-500 font-bold">Winners</span> section to see past tournament champions and their achievements
                     </p>
                   </li>
                 </ul>
@@ -145,7 +144,7 @@ export default function About() {
                   Need Help?
                 </h2>
                 <p className="text-lg font-medium">
-                  Got a question or suggestion? 💭 Reach out to a <span className="text-orange-500 font-bold">Moderator</span> or post in the <span className="text-orange-500 font-bold">Help and Support</span> channel, or you can reach out to me directly!
+                  Got a question or suggestion? Contact our support team at <a href="mailto:microtournaments4@gmail.com" className="text-orange-500 font-bold hover:text-orange-400 transition-colors">microtournaments4@gmail.com</a>. We're here to help make your tournament experience smooth and enjoyable!
                 </p>
               </div>
 

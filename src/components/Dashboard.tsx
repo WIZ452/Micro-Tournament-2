@@ -52,14 +52,14 @@ export default function Dashboard() {
     if (!user) return;
 
     try {
-      const { data: registrations, error: regError } = await supabase
+      const { data: registrations } = await supabase
         .from('tournament_registrations')
         .select('tournament_id')
         .eq('player_id', user.id);
 
       const tournamentsPlayed = registrations?.length || 0;
 
-      const { data: wonMatches, error: matchError } = await supabase
+      const { data: wonMatches } = await supabase
         .from('matches')
         .select('id')
         .eq('winner_id', user.id)
@@ -70,7 +70,7 @@ export default function Dashboard() {
         ? Math.round((wins / tournamentsPlayed) * 100) + '%'
         : '0%';
 
-      const { data: allPlayers, error: playersError } = await supabase
+      const { data: allPlayers } = await supabase
         .from('players')
         .select('id');
 
@@ -123,7 +123,6 @@ export default function Dashboard() {
         const isWinner = match.winner_id === user.id;
         const isPlayer1 = match.player1_id === user.id;
         const playerScore = isPlayer1 ? match.player1_score : match.player2_score;
-        const opponentScore = isPlayer1 ? match.player2_score : match.player1_score;
 
         let placement = '4th';
         if (isWinner) {
