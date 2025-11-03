@@ -146,16 +146,16 @@ function App() {
       </div>
 
       {/* Floating Navigation */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-6xl px-4">
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-7xl px-3 sm:px-4">
         <div className="bg-slate-900/40 backdrop-blur-xl border border-orange-500/20 rounded-2xl shadow-2xl shadow-black/50">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
               <div className="relative">
-                <Trophy className="w-9 h-9 text-orange-500" />
+                <Trophy className="w-7 h-7 sm:w-9 sm:h-9 text-orange-500" />
                 <div className="absolute -inset-1 bg-orange-500/20 blur-xl"></div>
               </div>
-              <div>
-                <span className="text-2xl font-black tracking-tighter text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <div className="hidden sm:block">
+                <span className="text-xl sm:text-2xl font-black tracking-tighter text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                   MTT
                 </span>
                 <div className="text-xs text-orange-500 font-bold tracking-wider uppercase -mt-1">
@@ -163,9 +163,9 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto flex-wrap justify-center sm:justify-end gap-1">
               {/* Navigation Buttons */}
-              <div className="flex space-x-2">
+              <div className="flex space-x-1 sm:space-x-2 flex-wrap justify-center">
                 {(isAuthenticated ? [
                   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
                   { id: 'tournaments', label: 'Tournaments', icon: Trophy },
@@ -180,14 +180,14 @@ function App() {
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id as any)}
-                    className={`group flex items-center space-x-2 px-4 py-2 rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 ${
+                    className={`group flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 whitespace-nowrap flex-shrink-0 ${
                       activeSection === item.id
                         ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/50 scale-105'
                         : 'text-slate-400 hover:text-white hover:bg-slate-800/50 hover:shadow-md hover:shadow-orange-500/20'
                     }`}
                   >
-                    <item.icon className={`w-4 h-4 transition-transform duration-300 ${activeSection === item.id ? '' : 'group-hover:rotate-12 group-hover:scale-110'}`} />
-                    <span className="hidden sm:inline">{item.label}</span>
+                    <item.icon className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 ${activeSection === item.id ? '' : 'group-hover:rotate-12 group-hover:scale-110'}`} />
+                    <span className="hidden md:inline text-xs">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -197,17 +197,17 @@ function App() {
                 <>
                   <button
                     onClick={() => setActiveSection('login')}
-                    className="group flex items-center space-x-2 px-4 py-2 rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 text-slate-400 hover:text-white hover:bg-slate-800/50 hover:shadow-md hover:shadow-orange-500/20"
+                    className="group flex items-center space-x-1 px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 text-slate-400 hover:text-white hover:bg-slate-800/50 hover:shadow-md hover:shadow-orange-500/20 flex-shrink-0"
                   >
-                    <LogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-                    <span className="hidden sm:inline">Login</span>
+                    <LogOut className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
+                    <span className="hidden sm:inline text-xs">Login</span>
                   </button>
                   <button
                     onClick={() => setActiveSection('register')}
-                    className="group flex items-center space-x-2 px-4 py-2 rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
+                    className="group flex items-center space-x-1 px-2 sm:px-4 py-2 rounded-lg sm:rounded-xl font-bold uppercase text-xs tracking-wide transition-all duration-300 hover:scale-105 bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 flex-shrink-0"
                   >
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Register</span>
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline text-xs">Register</span>
                   </button>
                 </>
               )}

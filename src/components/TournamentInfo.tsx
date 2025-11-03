@@ -7,6 +7,8 @@ export default function TournamentInfo() {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const [joinSuccess, setJoinSuccess] = useState(false);
+  const [activeRuleTab, setActiveRuleTab] = useState(0);
+  const [rulesAgreed, setRulesAgreed] = useState(false);
 
   const handleJoinClick = (tournament: any) => {
     if (!isAuthenticated) {
@@ -18,13 +20,66 @@ export default function TournamentInfo() {
   };
 
   const handleConfirmJoin = () => {
+    if (!rulesAgreed) {
+      alert('Please review and agree to all rules before registering');
+      return;
+    }
     setJoinSuccess(true);
     setTimeout(() => {
       setShowJoinModal(false);
       setJoinSuccess(false);
       setSelectedTournament(null);
+      setRulesAgreed(false);
+      setActiveRuleTab(0);
     }, 2000);
   };
+
+  const ruleSections = [
+    {
+      title: 'Mechanics',
+      icon: '⚙️',
+      content: [
+        'Tournament format: Single elimination',
+        'Best of 3 matches per round',
+        'Matches scheduled based on participant availability',
+        'Automatic advancement with each victory',
+        'Final bracket available in real-time'
+      ]
+    },
+    {
+      title: 'Match Rules',
+      icon: '🎮',
+      content: [
+        'All matches must start within 15 minutes of scheduled time',
+        'Players have 10 minutes to connect before forfeiture',
+        'Technical timeouts allowed: Maximum 2 per match (5 minutes each)',
+        'Matches must be completed by tournament deadline',
+        'Disconnection results in loss if not reconnected within 5 minutes'
+      ]
+    },
+    {
+      title: 'Gameplay Rules',
+      icon: '🎯',
+      content: [
+        'No exploits, glitches, or hacks allowed',
+        'All in-game settings must remain default',
+        'Screen sharing/streaming allowed (must be announced)',
+        'No external software or modifications',
+        'Fair play is mandatory - violations result in disqualification'
+      ]
+    },
+    {
+      title: 'Conduct Rules',
+      icon: '🤝',
+      content: [
+        'Respectful communication required at all times',
+        'No harassment, hate speech, or toxic behavior',
+        'Disagreements must be reported to organizers',
+        'Organizer decisions are final',
+        'Violations result in immediate removal and potential ban'
+      ]
+    }
+  ];
   const upcomingTournaments = [
     {
       title: 'Weekend Warriors Championship',
@@ -126,71 +181,131 @@ export default function TournamentInfo() {
           </div>
         </div>
 
-        {/* Join Tournament Modal */}
+        {/* Join Tournament Modal with Rules */}
         {showJoinModal && selectedTournament && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="relative bg-slate-900/95 border-2 border-orange-500/50 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl shadow-orange-500/20">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="relative bg-slate-900/95 border-2 border-orange-500/50 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-orange-500/20">
               {!joinSuccess ? (
                 <>
                   {/* Close Button */}
                   <button
                     onClick={() => setShowJoinModal(false)}
-                    className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+                    className="sticky top-4 right-4 absolute z-10 text-slate-400 hover:text-white transition-colors"
                   >
                     <X className="w-6 h-6" />
                   </button>
 
-                  {/* Header */}
-                  <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full mb-4">
-                      <Trophy className="w-8 h-8 text-white" strokeWidth={2.5} />
-                    </div>
-                    <h2 className="text-3xl font-black text-white uppercase mb-2">Join Tournament</h2>
-                    <p className="text-slate-400 font-bold">{selectedTournament.title}</p>
-                  </div>
-
-                  {/* Tournament Details */}
-                  <div className="space-y-3 mb-6 bg-black/40 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 font-bold text-sm">Date:</span>
-                      <span className="text-white font-black">{selectedTournament.date}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 font-bold text-sm">Time:</span>
-                      <span className="text-white font-black">{selectedTournament.time}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 font-bold text-sm">Prize Pool:</span>
-                      <span className="text-green-400 font-black">{selectedTournament.prize}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400 font-bold text-sm">Slots:</span>
-                      <span className="text-orange-400 font-black">{selectedTournament.slots}</span>
-                    </div>
-                    {user && (
-                      <div className="flex items-center justify-between pt-3 border-t border-slate-700">
-                        <span className="text-slate-400 font-bold text-sm">Playing as:</span>
-                        <span className="text-orange-500 font-black">{user.gamertag}</span>
+                  <div className="p-6 sm:p-8">
+                    {/* Header */}
+                    <div className="text-center mb-8">
+                      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full mb-4">
+                        <Trophy className="w-8 h-8 text-white" strokeWidth={2.5} />
                       </div>
-                    )}
-                  </div>
+                      <h2 className="text-3xl font-black text-white uppercase mb-2">Tournament Registration</h2>
+                      <p className="text-slate-400 font-bold">{selectedTournament.title}</p>
+                    </div>
 
-                  {/* Confirm Button */}
-                  <button
-                    onClick={handleConfirmJoin}
-                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-black text-lg uppercase tracking-wide hover:shadow-xl hover:shadow-orange-500/50 transition-all duration-200 border-2 border-orange-400/50"
-                  >
-                    Confirm Registration
-                  </button>
-                  <button
-                    onClick={() => setShowJoinModal(false)}
-                    className="w-full py-3 mt-3 bg-slate-800/50 border-2 border-slate-700 text-slate-300 rounded-xl font-bold uppercase hover:bg-slate-700 transition-all"
-                  >
-                    Cancel
-                  </button>
+                    {/* Tournament Details */}
+                    <div className="space-y-2 mb-8 bg-black/40 rounded-xl p-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 font-bold">Date:</span>
+                        <span className="text-white font-black">{selectedTournament.date}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 font-bold">Time:</span>
+                        <span className="text-white font-black">{selectedTournament.time}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 font-bold">Prize Pool:</span>
+                        <span className="text-green-400 font-black">{selectedTournament.prize}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-400 font-bold">Slots:</span>
+                        <span className="text-orange-400 font-black">{selectedTournament.slots}</span>
+                      </div>
+                      {user && (
+                        <div className="flex items-center justify-between text-sm pt-3 border-t border-slate-700">
+                          <span className="text-slate-400 font-bold">Playing as:</span>
+                          <span className="text-orange-500 font-black">{user.gamertag}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rules Tabs */}
+                    <div className="mb-8">
+                      <h3 className="text-xl font-black text-white mb-4 uppercase">Tournament Rules</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {ruleSections.map((section, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setActiveRuleTab(index)}
+                            className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-lg font-bold text-xs sm:text-sm uppercase transition-all ${
+                              activeRuleTab === index
+                                ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
+                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            <span>{section.icon}</span>
+                            <span className="hidden sm:inline">{section.title}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Rules Content */}
+                      <div className="bg-black/40 rounded-xl p-4 sm:p-6 border border-slate-700">
+                        <h4 className="text-lg font-black text-white mb-4 uppercase">
+                          {ruleSections[activeRuleTab].title}
+                        </h4>
+                        <ul className="space-y-2">
+                          {ruleSections[activeRuleTab].content.map((rule, index) => (
+                            <li key={index} className="flex items-start space-x-3">
+                              <span className="text-orange-500 font-black mt-0.5">•</span>
+                              <span className="text-slate-300 text-sm">{rule}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Agreement Checkbox */}
+                    <div className="mb-6 bg-orange-500/10 border border-orange-500/30 rounded-xl p-4">
+                      <label className="flex items-start space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={rulesAgreed}
+                          onChange={(e) => setRulesAgreed(e.target.checked)}
+                          className="mt-1 w-5 h-5 rounded accent-orange-500"
+                        />
+                        <span className="text-slate-300 text-sm font-medium">
+                          I have reviewed all tournament rules and agree to follow them. I understand that violations may result in disqualification.
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        onClick={handleConfirmJoin}
+                        disabled={!rulesAgreed}
+                        className={`flex-1 py-4 rounded-xl font-black text-lg uppercase tracking-wide border-2 transition-all ${
+                          rulesAgreed
+                            ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white border-orange-400/50 hover:shadow-xl hover:shadow-orange-500/50'
+                            : 'bg-slate-700 text-slate-500 border-slate-600 cursor-not-allowed'
+                        }`}
+                      >
+                        Register Now
+                      </button>
+                      <button
+                        onClick={() => setShowJoinModal(false)}
+                        className="flex-1 py-4 bg-slate-800/50 border-2 border-slate-700 text-slate-300 rounded-xl font-bold uppercase hover:bg-slate-700 transition-all"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 </>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-12 px-6">
                   <div className="inline-flex items-center justify-center w-20 h-20 bg-green-500/20 rounded-full mb-4 animate-pulse">
                     <CheckCircle className="w-12 h-12 text-green-400" strokeWidth={2.5} />
                   </div>

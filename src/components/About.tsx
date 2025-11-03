@@ -1,4 +1,4 @@
-import { Trophy, Users, Target, MessageCircle, Bell } from 'lucide-react';
+import { Trophy, Users, Target, MessageCircle, Bell, ExternalLink } from 'lucide-react';
 import { useScrollAnimation } from '../hooks/useScrollAnimation';
 
 export default function About() {
@@ -150,9 +150,18 @@ export default function About() {
 
               <div className="text-center py-8">
                 <div className="inline-block bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-8 shadow-2xl">
-                  <p className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide">
+                  <p className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide mb-6">
                     Welcome to the community—let the games begin! 🚀🔥
                   </p>
+                  <a
+                    href="https://discord.gg/ggfNRpTzE4"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 bg-white/20 hover:bg-white/30 transition-colors px-6 py-3 rounded-xl font-bold text-white backdrop-blur"
+                  >
+                    <span>Join Our Discord Community</span>
+                    <ExternalLink className="w-5 h-5" />
+                  </a>
                 </div>
               </div>
             </div>
