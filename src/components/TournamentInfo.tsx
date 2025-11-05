@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 export default function TournamentInfo() {
   const { isAuthenticated, user } = useAuth();
   const [showJoinModal, setShowJoinModal] = useState(false);
+  const [showRegisterPrompt, setShowRegisterPrompt] = useState(false);
   const [selectedTournament, setSelectedTournament] = useState<any>(null);
   const [joinSuccess, setJoinSuccess] = useState(false);
   const [activeRuleTab, setActiveRuleTab] = useState(0);
@@ -12,7 +13,7 @@ export default function TournamentInfo() {
 
   const handleJoinClick = (tournament: any) => {
     if (!isAuthenticated) {
-      alert('Please login or register to join tournaments');
+      setShowRegisterPrompt(true);
       return;
     }
     setSelectedTournament(tournament);
@@ -180,6 +181,52 @@ export default function TournamentInfo() {
             ))}
           </div>
         </div>
+
+        {/* Registration Prompt Modal for Unregistered Users */}
+        {showRegisterPrompt && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="relative bg-slate-900/95 border-2 border-orange-500/50 rounded-2xl max-w-md w-full shadow-2xl shadow-orange-500/20 p-8">
+              <button
+                onClick={() => setShowRegisterPrompt(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              <div className="text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-full mb-6">
+                  <Trophy className="w-8 h-8 text-white" strokeWidth={2.5} />
+                </div>
+
+                <h2 className="text-3xl font-black text-white uppercase mb-3">Create Account</h2>
+                <p className="text-slate-300 font-medium mb-8">
+                  Join Micro Tournaments to register for competitions, track your stats, and compete for prizes.
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setShowRegisterPrompt(false);
+                      window.dispatchEvent(new CustomEvent('openRegister'));
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-black uppercase tracking-wide hover:shadow-xl hover:shadow-orange-500/50 transition-all duration-200 border-2 border-orange-400/50"
+                  >
+                    Register Now
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowRegisterPrompt(false);
+                      window.dispatchEvent(new CustomEvent('openLogin'));
+                    }}
+                    className="w-full py-4 bg-slate-800/50 border-2 border-slate-700 text-slate-300 rounded-xl font-bold uppercase hover:bg-slate-700 transition-all"
+                  >
+                    Already have an account? Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Join Tournament Modal with Rules */}
         {showJoinModal && selectedTournament && (
